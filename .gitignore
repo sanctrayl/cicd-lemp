@@ -6,3 +6,4 @@ venv/
 secrets.toml
 .DS_Store
 .git
+k8s/mysql-secret.yaml

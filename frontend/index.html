@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEMP Stack K8s Demo</title>
+    <base href="/kube/">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #f0f2f5; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #1a1a1a; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        button { background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin: 5px; font-size: 16px; transition: background 0.2s; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 20px; padding: 15px; background: #2d2d2d; color: #fff; border-radius: 6px; white-space: pre-wrap; font-family: monospace; }
+        .status { font-size: 0.9em; color: #666; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LEMP Stack on Kubernetes</h1>
+        <p class="status">Frontend: Nginx | Backend: Python/Flask | Database: MySQL</p>
+
+        <div>
+            <button onclick="checkHealth()">Check Backend Health</button>
+            <button onclick="initDB()">Initialize Database</button>
+            <button onclick="getUsers()">Get Users</button>
+        </div>
+
+	<div class="add-form">
+            <h3>Add New User</h3>
+            <input type="text" id="newName" placeholder="Name">
+            <input type="text" id="newEmail" placeholder="Email">
+            <button onclick="addUser()" style="background:#28a745;">Save to Database</button>
+        </div>
+
+        <div id="result">Waiting for action...</div>
+    </div>
+
+    <script>
+	const resultDiv = document.getElementById('result');
+
+        async function checkHealth() {
+            const res = await fetch('api/health');
+            resultDiv.textContent = await res.text();
+        }
+
+        async function initDB() {
+            const res = await fetch('api/init-db');
+            resultDiv.textContent = await res.text();
+        }
+
+        async function getUsers() {
+            const res = await fetch('api/users');
+            const data = await res.json();
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function getUsers() {
+            try {
+                const response = await fetch('api/users');
+                const data = await response.json();
+                resultDiv.textContent = 'Users: ' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+
+	async function addUser() {
+            const name = document.getElementById('newName').value;
+            const email = document.getElementById('newEmail').value;
+
+            if(!name || !email) { alert("Fields are empty!"); return; }
+
+            try {
+                const response = await fetch('api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, email: email })
+                });
+                const data = await response.json();
+                resultDiv.textContent = 'Server Response: ' + JSON.stringify(data, null, 2);
+
+                getUsers();
+
+                document.getElementById('newName').value = '';
+                document.getElementById('newEmail').value = '';
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
