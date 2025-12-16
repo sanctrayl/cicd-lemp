@@ -7,3 +7,5 @@ secrets.toml
 .DS_Store
 .git
 k8s/mysql-secret.yaml
+minikube-linux-amd64
+kubectl

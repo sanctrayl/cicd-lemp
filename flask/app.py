@@ -174,3 +174,16 @@ def handle_users():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
+import psutil
+
+@app.route('/api/system')
+def system_status():
+    """New Feature: Returns server system stats"""
+    cpu_usage = psutil.cpu_percent()
+    memory = psutil.virtual_memory()
+    return jsonify({
+        "cpu_percent": cpu_usage,
+        "memory_percent": memory.percent,
+        "status": "online"
+    })
