@@ -5,7 +5,7 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -15,8 +15,8 @@ spec:
         app: frontend
     spec:
       containers:
-      - name: nginx
-        image: frontend:latest
+      - name: frontend
+        image: lemp-frontend:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 80
