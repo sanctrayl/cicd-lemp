@@ -1,0 +1,52 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install Dependencies
+      run: |
+        pip install -r flask/requirements.txt
+        
+    - name: Run Tests
+      run: |
+        pytest flask/tests/
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd ~/final
+          
+          git pull origin main
+          
+          eval $(minikube docker-env)
+          
+          docker build -t lemp-backend:latest ./flask
+          docker build -t lemp-frontend:latest ./frontend
+          
+          kubectl rollout restart deployment/backend
+          kubectl rollout restart deployment/frontend
+          
+          kubectl rollout status deployment/backend
+          kubectl rollout status deployment/frontend
