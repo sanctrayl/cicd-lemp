@@ -4,15 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LEMP Stack K8s Demo</title>
-    <base href="/kube/">
+    <script>
+        let path = window.location.pathname;
+        if (!path.endsWith('/')) { path += '/'; }
+        document.write("<base href='" + path + "' />");
+    </script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #f0f2f5; }
         .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { color: #1a1a1a; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         button { background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin: 5px; font-size: 16px; transition: background 0.2s; }
         button:hover { background: #0056b3; }
+        .btn-system { background: #6f42c1; } /* Purple button for new feature */
+        .btn-system:hover { background: #5a32a3; }
         #result { margin-top: 20px; padding: 15px; background: #2d2d2d; color: #fff; border-radius: 6px; white-space: pre-wrap; font-family: monospace; }
         .status { font-size: 0.9em; color: #666; margin-bottom: 20px; }
+        .input-group { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+        input { padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -24,9 +32,10 @@
             <button onclick="checkHealth()">Check Backend Health</button>
             <button onclick="initDB()">Initialize Database</button>
             <button onclick="getUsers()">Get Users</button>
+            <button onclick="checkSystem()" class="btn-system">Check System Status</button>
         </div>
 
-	<div class="add-form">
+        <div class="input-group">
             <h3>Add New User</h3>
             <input type="text" id="newName" placeholder="Name">
             <input type="text" id="newEmail" placeholder="Email">
@@ -37,22 +46,31 @@
     </div>
 
     <script>
-	const resultDiv = document.getElementById('result');
+        const resultDiv = document.getElementById('result');
 
         async function checkHealth() {
-            const res = await fetch('api/health');
-            resultDiv.textContent = await res.text();
+            try {
+                const res = await fetch('api/health');
+                const text = await res.text();
+                resultDiv.textContent = 'Health Check: ' + text;
+            } catch (e) { resultDiv.textContent = 'Error: ' + e; }
+        }
+
+        async function checkSystem() {
+            try {
+                resultDiv.textContent = "Fetching system stats...";
+                const res = await fetch('api/system');
+                const data = await res.json();
+                resultDiv.textContent = 'System Status:\n' + JSON.stringify(data, null, 2);
+            } catch (e) { resultDiv.textContent = 'Error fetching system stats: ' + e; }
         }
 
         async function initDB() {
-            const res = await fetch('api/init-db');
-            resultDiv.textContent = await res.text();
-        }
-
-        async function getUsers() {
-            const res = await fetch('api/users');
-            const data = await res.json();
-            resultDiv.textContent = JSON.stringify(data, null, 2);
+            try {
+                const res = await fetch('api/init-db');
+                const text = await res.text();
+                resultDiv.textContent = 'DB Init: ' + text;
+            } catch (e) { resultDiv.textContent = 'Error: ' + e; }
         }
 
         async function getUsers() {
@@ -65,7 +83,7 @@
             }
         }
 
-	async function addUser() {
+        async function addUser() {
             const name = document.getElementById('newName').value;
             const email = document.getElementById('newEmail').value;
 
@@ -79,9 +97,9 @@
                 });
                 const data = await response.json();
                 resultDiv.textContent = 'Server Response: ' + JSON.stringify(data, null, 2);
-
+                
                 getUsers();
-
+                
                 document.getElementById('newName').value = '';
                 document.getElementById('newEmail').value = '';
             } catch (error) {
